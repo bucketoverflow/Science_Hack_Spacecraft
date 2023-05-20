@@ -1,6 +1,8 @@
 import numpy as np
 from numpy import cos, pi, sin
 import pygame
+from gym.spaces import Box, Discrete
+
 
 import gymnasium as gym
 from gymnasium import spaces
@@ -55,6 +57,8 @@ class Spacecraft(gym.Env):
             2: np.array([0, 0]),  # Thruster OFF, Communications OFF
             3: np.array([0, 1])  # Thruster OFF, Communications ON
         }
+        
+        self.observation_space = Box(low = -1, high = 1, shape = (15,), dtype = np.float64)
 
         self.mass_spacecraft = self.MASS_SPACECRAFT_INITIAL
 
