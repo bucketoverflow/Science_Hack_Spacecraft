@@ -42,7 +42,8 @@ if __name__ == "__main__":
 
     t = np.linspace(1, 10, 50)
 
-    Isp = th.get_isp(t)
+    #Isp = th.get_isp(t)
+    Isp = 350
     thrust = th.get_thrust(5e-4, t)
 
     plt.plot(t, Isp)

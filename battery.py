@@ -1,5 +1,5 @@
 
-class Battery:
+class Battery():
 
     """
         Implementation of the energy storage.
