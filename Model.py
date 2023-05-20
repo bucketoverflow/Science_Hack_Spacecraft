@@ -52,9 +52,11 @@ def main():
     for episode in range(EPISODES):
         state, unused = env.reset()
         print(f"Episode {episode} from {EPISODES}")
-        eps = (1 / (1 + 0.95 * episode)) * EPS_START
+        eps = EPS_START - 0.01 * episode
         done = False
         truncated = False
+
+        writer.add_scalar('eps', eps, episode)
 
         while not done and not truncated:
             # Select action
