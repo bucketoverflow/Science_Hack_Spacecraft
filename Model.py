@@ -67,8 +67,7 @@ def main():
 
             # Compute current Q value
             state_tensor = torch.FloatTensor(state)
-            dqn_res = dqn(state_tensor)
-            current_q_value = dqn_res[action]
+            current_q_value = dqn(state_tensor)[0][action]
 
             # Compute loss
             loss = criterion(current_q_value, target_q_value)
