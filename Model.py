@@ -20,7 +20,7 @@ def main():
     env = Spacecraft()
 
     # Hyperparameters
-    EPISODES = 1000
+    EPISODES = 50
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 200
@@ -72,3 +72,5 @@ def main():
             state = next_state
 if __name__ == "__main__":
     main()
+
+print("finished")
