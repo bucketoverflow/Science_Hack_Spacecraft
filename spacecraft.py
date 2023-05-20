@@ -19,8 +19,23 @@ from thruster import Thruster
 from renderer import Renderer
 from battery import Battery
 from DataClass import Data
+import torch
+import torch.nn as nn
+class DQN(nn.Module):
+    # definition of the neural network , 1 hidden layer for the moment
+    def __init__(self, obs_space, action_space):
+        super(DQN, self).__init__()
+        self.fc1 = nn.Linear(obs_space, 128)
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, action_space)
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.to(device)
 
-
+    # using relu all over it
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        return self.fc3(x)
 class Spacecraft(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 60}
 
@@ -28,11 +43,12 @@ class Spacecraft(gym.Env):
 
     MASS_SPACECRAFT_INITIAL = 12
     INITIAL_ENERGY = 15000  # 15000 [J]
+    # Next one 67500000
     INITIAL_DATA_STORAGE = 60000000  # [bits]
     POWER_CONSUMPTION = 10  # [W]
     INITIAL_PROPELLANT_MASS = 2  # [Kg]
     R_NEPTUNE = 24622  # [km]
-    MAX_STEPS = 2500
+    MAX_STEPS = 5000
 
     # --------------    SEMIMAJOR AXIS        ECCENTRICITY        INCLINATION (º)          RAAN (º)             ARGP (º)           TRUE ANOMALY (º) -------------
     COM_ORBIT = {'a': (R_NEPTUNE + 1350.0), 'e': 0.0, 'i': 0.0, 'raan': 0.0, 'argp': 0.0, 'nu': 0.0}
@@ -74,7 +90,7 @@ class Spacecraft(gym.Env):
         self.render_mode = render_mode
 
         if self.render_mode == "human":
-            self.renderer = Renderer()
+            self.renderer = Renderer(self.INITIAL_DATA_STORAGE)
             self.orbit_propagator.reset_orbits()
             self.com_orbit_points = self.orbit_propagator.get_orbit_points(self.orbit_propagator.orb_com)
             self.obs_orbit_points = self.orbit_propagator.get_orbit_points(self.orbit_propagator.orb_obs)
@@ -237,14 +253,14 @@ class Spacecraft(gym.Env):
 
         terminal = False
 
-        # if self.propellant_tank.current_mass <= 0:
-        #     terminal = True
-        # if self.battery.current_energy <= 0:
-        #     terminal = True
-        # if self.DataClass.current_data <= 0:
-        #     terminal = True
-        # if np.linalg.norm(self.orbit_propagator.orb_com.r.value) <= 24622:
-        #     terminal = True
+        if self.propellant_tank.current_mass <= 0:
+             terminal = True
+        if self.battery.current_energy <= 0:
+             terminal = True
+        if self.DataClass.current_data <= 0:
+             terminal = True
+        if np.linalg.norm(self.orbit_propagator.orb_com.r.value) <= 24622:
+             terminal = True
 
         return terminal
 
@@ -259,26 +275,40 @@ class Spacecraft(gym.Env):
 
     def render(self):
         r = self.orbit_propagator.orbit_compare()
-        l = len(self.orbit_propagator.positions_com)
-
-        if len(self.orbit_propagator.positions_com) < 101:
+        pos_len = len(self.orbit_propagator.positions_com)
+        if pos_len < 101:
             self.renderer.render(self.com_orbit_points, self.obs_orbit_points, self.orbit_propagator.positions_com,
-                                 self.orbit_propagator.positions_obs, self.comms)
+                                 self.orbit_propagator.positions_obs, self.comms, self.DataClass.current_data)
         else:
             self.renderer.render(self.com_orbit_points, self.obs_orbit_points,
-                                 self.orbit_propagator.positions_com[l - 100:l],
-                                 self.orbit_propagator.positions_obs[l - 100:l], self.comms)
+                                 self.orbit_propagator.positions_com[pos_len - 100:pos_len],
+                                 self.orbit_propagator.positions_obs[pos_len - 100:pos_len], self.comms,
+                                 self.DataClass.current_data)
+
+def load_model(path, env):
+    model = DQN(env.observation_space.shape[0], env.action_space.n)
+    model.load_state_dict(torch.load(path))
+    model.eval()
+    return model
 
 
 if __name__ == "__main__":
     from itertools import count
-
     env = Spacecraft(render_mode="human")
-    env = Spacecraft()
     env.reset()
+    model = load_model(
+        "/Users/benedikt/Desktop/environment/Klon\model_2023-05-2023_00_04_299724.pt", env)
+
+    action_list = []
     for t in count():
-        observation, reward, terminated, truncated, _ = env.step(0)
-        print(env.get_state())
+        # sample model -> action
+        state_tensor = torch.FloatTensor(env.state)
+        q_values = model(state_tensor)
+        action = torch.argmax(q_values).item()
+        action_list.append(action)
+        observation, reward, terminated, truncated, _ = env.step(action)
         done = terminated or truncated
         if done:
+            print(f"terminated: {terminated}, truncated: {truncated} reward: {reward}")
+            print(f"performed actions: {action_list}")
             break

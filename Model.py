@@ -7,7 +7,7 @@ from spacecraft import Spacecraft
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 
-
+# less learning rate, much more episode
 class DQN(nn.Module):
     # definition of the neural network , 1 hidden layer for the moment
     def __init__(self, obs_space, action_space):
@@ -30,12 +30,12 @@ def main():
     env = Spacecraft()
 
     # Hyperparameters
-    EPISODES = 100
+    EPISODES = 1000
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 0.01
     GAMMA = 0.99
-    LR = 0.02
+    LR = 0.08
 
     # Initialize DQN
     dqn = DQN(env.observation_space.shape[0], env.action_space.n)
@@ -51,8 +51,8 @@ def main():
     # Training loop
     for episode in range(EPISODES):
         state, unused = env.reset()
-        print(state)
-        eps = EPS_END + (EPS_START - EPS_END) * np.exp(-1. * episode / EPS_DECAY)
+        print(f"Episode {episode} from {EPISODES}")
+        eps = (1 / (1 + 0.95 * episode)) * EPS_START
         done = False
         truncated = False
 
@@ -99,12 +99,14 @@ def main():
 
             state = next_state
             iteration += 1
-
+        current_dir = os.getcwd()
+        time_stamp = str(datetime.datetime.now()).replace(" ", "").replace(":", "_").replace(".", "_")
+        if env.get_reward() > 4:
+            save_model(dqn, optimizer, episode)
+            print(reward)
     writer.close()
 
-    # current_dir = os.getcwd()
-    # time_stamp = str(datetime.datetime.now()).replace(" ", "").replace(":", "_").replace(".", "_")
-    # torch.save(dqn.state_dict(), f"{current_dir}\\model_{time_stamp}.pt")
+
 
     # env.init_renderer(render_mode="human")
     # env.render()
@@ -113,15 +115,27 @@ def main():
                "Data Transferred": env.data_sent}
     return results
 
+def save_model(dqn, optimizer=None, epoch=0):
+    current_dir = os.getcwd()
+    time_stamp = str(datetime.datetime.now()).replace(" ", "").replace(":", "_").replace(".", "_")
+    if optimizer:
+        torch.save(dqn.state_dict(), f"{current_dir}\\all_data_send_model_{time_stamp}.pt")
+    else:
+        state = {
+            'epoch': epoch,
+            'state_dict': dqn.state_dict(),
+            'optimizer': optimizer.state_dict()
+        }
+        torch.save(state, f"{current_dir}\\all_data_send_model_{time_stamp}.pt")
+
 def load_model(path, env):
     model = DQN(env.observation_space.shape[0], env.action_space.n)
     model.load_state_dict(torch.load(path))
-    model.eval()
 
 
 if __name__ == "__main__":
+    env = Spacecraft()
+    model = load_model(
+    "/Users/benedikt/Desktop/environment/Klon\model_2023-05-2022_23_33_408626.pt", env)
     Result = main()
     print("Finished")
-    print(Result)
-
-print("finished")
