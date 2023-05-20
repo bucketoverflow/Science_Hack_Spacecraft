@@ -1,10 +1,10 @@
+import os
+import datetime
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from spacecraft import Spacecraft
 import numpy as np
-
-
 class DQN(nn.Module):
     # definition of the neural network , 1 hidden layer for the moment
     def __init__(self, obs_space, action_space):
@@ -20,14 +20,12 @@ class DQN(nn.Module):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         return self.fc3(x)
-
-
 def main():
     # Initialize environment
     env = Spacecraft()
 
     # Hyperparameters
-    EPISODES = 5000
+    EPISODES = 1000
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 200
@@ -40,18 +38,17 @@ def main():
     criterion = nn.MSELoss()
 
     # Training loop
-    for episode in range(20):
+    for episode in range(EPISODES):
         state, unused = env.reset()
         print(state)
         eps = EPS_END + (EPS_START - EPS_END) * np.exp(-1. * episode / EPS_DECAY)
         done = False
-        truncated = False
 
-        while not done and not truncated:
+        while not done:
             # Select action
-            if np.random.rand() < eps:  # exploration
+            if np.random.rand() < eps: # exploration
                 action = env.action_space.sample()
-            else:  # exploitation
+            else: # exploitation
                 state_tensor = torch.FloatTensor(state)
                 q_values = dqn(state_tensor)
                 action = torch.argmax(q_values).item()
@@ -78,16 +75,21 @@ def main():
             optimizer.step()
 
             state = next_state
-            
-            Results = {"energy_used": env.en_used, "Propellant used": env.prop_used, "Reward": reward}
-            return Results
+        current_dir = os.getcwd()
+        time_stamp = str(datetime.datetime.now()).replace(" ", "").replace(":", "_").replace(".", "_")
+        torch.save(dqn.state_dict(), f"{current_dir}\\model_{time_stamp}.pt")
 
+        Result = {"Energy used": env.en_used, "Propellent used": env.prop_used, "Reward": reward, "Data Transferred": env.data_sent}
+        return Result
+
+
+
+def load_model(path, env):
+    model = DQN(env.observation_space.shape[0], env.action_space.n)
+    model.load_state_dict(torch.load(path))
+    model.eval()
 
 if __name__ == "__main__":
-    env = Spacecraft()
-    load_model(
-        ""
-    )
     Result = main()
-    print("finished!")
+    print("Finished")
     print(Result)
