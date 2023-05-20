@@ -51,10 +51,12 @@ def main():
     # Training loop
     for episode in range(EPISODES):
         state, unused = env.reset()
-        print(state)
-        eps = EPS_END + (EPS_START - EPS_END) * np.exp(-1. * episode / EPS_DECAY)
+        print(f"running episode {episode} from {EPISODES}")
+        eps = EPS_START - 0.01 * episode
         done = False
         truncated = False
+
+        writer.add_scalar('eps', eps, episode)
 
         while not done and not truncated:
             # Select action
