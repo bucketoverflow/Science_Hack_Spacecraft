@@ -1,3 +1,5 @@
+import os
+import datetime
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -67,7 +69,7 @@ def main():
 
             # Compute current Q value
             state_tensor = torch.FloatTensor(state)
-            current_q_value = dqn(state_tensor)[0][action]
+            current_q_value = dqn(state_tensor)[action]
 
             # Compute loss
             loss = criterion(current_q_value, target_q_value)
@@ -78,6 +80,16 @@ def main():
             optimizer.step()
 
             state = next_state
+
+    current_dir = os.getcwd()
+    time_stamp = str(datetime.datetime.now()).replace(" ", "").replace(":", "_").replace(".", "_")
+    torch.save(dqn.state_dict(), f"{current_dir}\\model_{time_stamp}.pt")
+
+
+def load_model(path, env):
+    model = DQN(env.observation_space.shape[0], env.action_space.n)
+    model.load_state_dict(torch.load(path))
+    model.eval()
 
 
 if __name__ == "__main__":
