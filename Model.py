@@ -25,7 +25,7 @@ def main():
     env = Spacecraft()
 
     # Hyperparameters
-    EPISODES = 1000000
+    EPISODES = 100
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 200
@@ -43,8 +43,8 @@ def main():
         print(state)
         eps = EPS_END + (EPS_START - EPS_END) * np.exp(-1. * episode / EPS_DECAY)
         done = False
-
-        while not done:
+        truncated = False
+        while not done and not truncated:
             # Select action
             if np.random.rand() < eps: # exploration
                 action = env.action_space.sample()
@@ -82,16 +82,10 @@ def main():
         Results = {"Energy used": env.en_used, "Propellent used": env.prop_used, "Reward": reward, "Data Transferred": env.data_sent}
         return Results
 
-
-
-
-
-
 def load_model(path, env):
     model = DQN(env.observation_space.shape[0], env.action_space.n)
     model.load_state_dict(torch.load(path))
     model.eval()
-
 
 if __name__ == "__main__":
     Result = main()
