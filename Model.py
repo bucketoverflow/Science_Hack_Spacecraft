@@ -30,12 +30,12 @@ def main():
     env = Spacecraft()
 
     # Hyperparameters
-    EPISODES = 50
+    EPISODES = 100
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 0.01
     GAMMA = 0.99
-    LR = 0.001
+    LR = 0.02
 
     # Initialize DQN
     dqn = DQN(env.observation_space.shape[0], env.action_space.n)
@@ -58,9 +58,9 @@ def main():
 
         while not done and not truncated:
             # Select action
-            if np.random.rand() < eps:  # exploration
+            if np.random.rand() < eps: # exploration
                 action = env.action_space.sample()
-            else:  # exploitation
+            else: # exploitation
                 state_tensor = torch.FloatTensor(state)
                 q_values = dqn(state_tensor)
                 action = torch.argmax(q_values).item()
@@ -109,6 +109,9 @@ def main():
     # env.init_renderer(render_mode="human")
     # env.render()
 
+    results = {"Energy used": env.en_used, "Propellent used": env.prop_used, "Reward": reward,
+               "Data Transferred": env.data_sent}
+    return results
 
 def load_model(path, env):
     model = DQN(env.observation_space.shape[0], env.action_space.n)
@@ -117,5 +120,8 @@ def load_model(path, env):
 
 
 if __name__ == "__main__":
-    main()
-    print("finished!")
+    Result = main()
+    print("Finished")
+    print(Result)
+
+print("finished")

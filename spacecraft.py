@@ -32,7 +32,7 @@ class Spacecraft(gym.Env):
     POWER_CONSUMPTION = 10  # [W]
     INITIAL_PROPELLANT_MASS = 2  # [Kg]
     R_NEPTUNE = 24622  # [km]
-    MAX_STEPS = 100
+    MAX_STEPS = 2500
 
     # --------------    SEMIMAJOR AXIS        ECCENTRICITY        INCLINATION (º)          RAAN (º)             ARGP (º)           TRUE ANOMALY (º) -------------
     COM_ORBIT = {'a': (R_NEPTUNE + 1350.0), 'e': 0.0, 'i': 0.0, 'raan': 0.0, 'argp': 0.0, 'nu': 0.0}
