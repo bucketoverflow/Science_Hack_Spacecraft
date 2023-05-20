@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 from spacecraft import Spacecraft
 import numpy as np
+
+
 class DQN(nn.Module):
     # definition of the neural network , 1 hidden layer for the moment
     def __init__(self, obs_space, action_space):
@@ -10,11 +12,16 @@ class DQN(nn.Module):
         self.fc1 = nn.Linear(obs_space, 128)
         self.fc2 = nn.Linear(128, 128)
         self.fc3 = nn.Linear(128, action_space)
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.to(device)
+
     # using relu all over it
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         return self.fc3(x)
+
+
 def main():
     # Initialize environment
     env = Spacecraft()
@@ -33,23 +40,25 @@ def main():
     criterion = nn.MSELoss()
 
     # Training loop
-    for episode in range(EPISODES):
+    for episode in range(20):
         state, unused = env.reset()
         print(state)
         eps = EPS_END + (EPS_START - EPS_END) * np.exp(-1. * episode / EPS_DECAY)
         done = False
+        truncated = False
 
-        while not done:
+        while not done and not truncated:
             # Select action
-            if np.random.rand() < eps: # exploration
+            if np.random.rand() < eps:  # exploration
                 action = env.action_space.sample()
-            else: # exploitation
+            else:  # exploitation
                 state_tensor = torch.FloatTensor(state)
                 q_values = dqn(state_tensor)
                 action = torch.argmax(q_values).item()
 
             # Take action
-            next_state, reward, done, truncated,empty = env.step(action)
+            reward = 0.
+            next_state, reward, done, truncated, empty = env.step(action)
 
             # Compute target Q value
             next_state_tensor = torch.FloatTensor(next_state)
@@ -57,9 +66,8 @@ def main():
             target_q_value = reward + GAMMA * torch.max(next_q_values)
 
             # Compute current Q value
-            print(torch.FloatTensor(state))
             state_tensor = torch.FloatTensor(state)
-            current_q_value = dqn(state_tensor)
+            current_q_value = dqn(state_tensor)[0][action]
 
             # Compute loss
             loss = criterion(current_q_value, target_q_value)
@@ -70,7 +78,10 @@ def main():
             optimizer.step()
 
             state = next_state
+
+
 if __name__ == "__main__":
     main()
+    print("finished!")
 
 print("finished")
