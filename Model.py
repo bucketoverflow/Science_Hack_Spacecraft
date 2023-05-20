@@ -78,6 +78,9 @@ def main():
             optimizer.step()
 
             state = next_state
+            
+            Results = {"energy_used": env.en_used, "Propellant used": env.prop_used, "Reward": reward}
+            return Results
 
 
 if __name__ == "__main__":
