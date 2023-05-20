@@ -27,12 +27,12 @@ def main():
     env = Spacecraft()
 
     # Hyperparameters
-    EPISODES = 50
+    EPISODES = 5000
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 200
     GAMMA = 0.99
-    LR = 0.001
+    LR = 0.03
 
     # Initialize DQN
     dqn = DQN(env.observation_space.shape[0], env.action_space.n)
@@ -67,7 +67,7 @@ def main():
 
             # Compute current Q value
             state_tensor = torch.FloatTensor(state)
-            current_q_value = dqn(state_tensor)[0][action]
+            current_q_value = dqn(state_tensor)[action]
 
             # Compute loss
             loss = criterion(current_q_value, target_q_value)
@@ -84,7 +84,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    env = Spacecraft()
+    load_model(
+        ""
+    )
+    Result = main()
     print("finished!")
-
-print("finished")
+    print(Result)
