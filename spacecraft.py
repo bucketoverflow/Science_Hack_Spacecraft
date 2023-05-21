@@ -21,6 +21,8 @@ from battery import Battery
 from DataClass import Data
 import torch
 import torch.nn as nn
+
+
 class DQN(nn.Module):
     # definition of the neural network , 1 hidden layer for the moment
     def __init__(self, obs_space, action_space):
@@ -36,6 +38,8 @@ class DQN(nn.Module):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         return self.fc3(x)
+
+
 class Spacecraft(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 60}
 
@@ -69,7 +73,7 @@ class Spacecraft(gym.Env):
             2: np.array([0, 0]),  # Thruster OFF, Communications OFF
             3: np.array([0, 1])  # Thruster OFF, Communications ON
         }
-        
+
         self.observation_space = Box(low = -1, high = 1, shape = (15,), dtype = np.float64)
 
         self.mass_spacecraft = self.MASS_SPACECRAFT_INITIAL
@@ -184,7 +188,7 @@ class Spacecraft(gym.Env):
 
         self.steps_to_truncate += 1
 
-        return self.state, reward, terminated, truncated, {}
+        return self.state, reward, terminated, truncated
 
     def get_state(self):
         return self._get_state_new()
@@ -226,7 +230,7 @@ class Spacecraft(gym.Env):
         if self.prop_used > 0:
             rew_prop_u = float(-self.prop_used)
         else:
-            rew_prop_u = 0.
+            rew_prop_u = 0
 
         if self.en_used > 0:
             rew_bat_u = -(self.en_used / self.INITIAL_ENERGY)
@@ -254,13 +258,13 @@ class Spacecraft(gym.Env):
         terminal = False
 
         if self.propellant_tank.current_mass <= 0:
-             terminal = True
+            terminal = True
         if self.battery.current_energy <= 0:
-             terminal = True
+            terminal = True
         if self.DataClass.current_data <= 0:
-             terminal = True
+            terminal = True
         if np.linalg.norm(self.orbit_propagator.orb_com.r.value) <= 24622:
-             terminal = True
+            terminal = True
 
         return terminal
 
@@ -299,10 +303,12 @@ if __name__ == "__main__":
     model = load_model(
         "/Users/benedikt/Desktop/environment/Klon\\all_data_send_model_2023-05-2102_01_22_300128.pt", env)
 
+    observation = env.state
+
     action_list = []
     for t in count():
         # sample model -> action
-        state_tensor = torch.FloatTensor(env.state)
+        state_tensor = torch.FloatTensor(observation)
         q_values = model(state_tensor)
         action = torch.argmax(q_values).item()
         action_list.append(action)
