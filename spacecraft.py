@@ -74,7 +74,7 @@ class Spacecraft(gym.Env):
             3: np.array([0, 1])  # Thruster OFF, Communications ON
         }
 
-        self.observation_space = Box(low = -1, high = 1, shape = (15,), dtype = np.float64)
+        self.observation_space = Box(low = -50000, high = 50000, shape = (18,), dtype = np.float64)
 
         self.mass_spacecraft = self.MASS_SPACECRAFT_INITIAL
 
@@ -197,8 +197,9 @@ class Spacecraft(gym.Env):
         return self._get_reward3()
 
     def _get_state_new(self):
-        r_com = self.orbit_propagator.orb_com.r.value / self.COM_ORBIT['a']
-        r_obs = self.orbit_propagator.orb_obs.r.value / self.OBSERVER_ORBIT['a']
+        r_com = (self.orbit_propagator.orb_com.r.value / self.COM_ORBIT['a'])[0]
+        r_obs = (self.orbit_propagator.orb_obs.r.value / self.OBSERVER_ORBIT['a'])[0]
+        r_diff = (self.orbit_propagator.orb_com.r.value - self.orbit_propagator.orb_obs.r.value)[0]
 
         h_com = self.orbit_propagator.orb_com.a.value / self.R_NEPTUNE
         h_obs = self.orbit_propagator.orb_obs.a.value / self.R_NEPTUNE
@@ -217,7 +218,7 @@ class Spacecraft(gym.Env):
         data_left = self.DataClass.current_data
 
         return np.array(
-            [h_com, h_obs, ecc_com, ecc_obs, cos(argp_com), sin(argp_com), cos(argp_obs), sin(argp_obs), cos(theta_com),
+            [r_com, r_obs, r_diff, h_com, h_obs, ecc_com, ecc_obs, cos(argp_com), sin(argp_com), cos(argp_obs), sin(argp_obs), cos(theta_com),
              sin(theta_com), cos(theta_obs), sin(theta_obs), propellant_mass, energy_level, data_left])
 
     def _get_reward3(self):

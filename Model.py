@@ -38,13 +38,13 @@ def main(actor=None, critic=None):
     env.reset()
 
     # Hyperparameters
-    EPISODES = 2500
+    EPISODES = 800
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 0.01
-    GAMMA = 0.99
-    LR = 0.03
-    TAU = 0.01
+    GAMMA = 0.999
+    LR = 0.001
+    TAU = 0.1
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -106,9 +106,12 @@ def main(actor=None, critic=None):
             optimizer_critic.step()
 
             actor_loss = -critic(state, actor(state)).mean()
-            prop_mass = next_state[12]
-            energy_lvl = next_state[13]
-            data_left = next_state[14]
+            prop_mass = next_state[15]
+            energy_lvl = next_state[16]
+            data_left = next_state[17]
+            orb_com = next_state[0]
+            orb_cbs = next_state[1]
+            orb_diff = next_state[2]
 
             if iteration % 50 == 49:  # log data every 50 iterations
                 writer.add_scalar('reward', reward, episode * iteration)
@@ -116,6 +119,10 @@ def main(actor=None, critic=None):
                 writer.add_scalar('Propellant Mass', prop_mass, episode * iteration)
                 writer.add_scalar('Energy Level', energy_lvl, episode * iteration)
                 writer.add_scalar('Data Left', data_left, episode * iteration)
+                writer.add_scalar('Tau', TAU, episode * iteration)
+                writer.add_scalar('Orbit Communicator', orb_com, episode * iteration)
+                writer.add_scalar('Orbit Observer', orb_cbs, episode * iteration)
+                writer.add_scalar('Orbit difference', orb_diff, episode * iteration)
 
             optimizer_actor.zero_grad()
             actor_loss.backward()
@@ -131,13 +138,14 @@ def main(actor=None, critic=None):
                 # save_model(dqn)
                 writer.add_scalar('reward', reward, episode * iteration)
                 writer.add_scalar('actor_loss', actor_loss, episode * iteration)
-                prop_mass = next_state[12]
-                energy_lvl = next_state[13]
-                data_left = next_state[14]
+                prop_mass = next_state[15]
+                energy_lvl = next_state[16]
+                data_left = next_state[17]
 
                 writer.add_scalar('Propellant Mass', prop_mass, episode * iteration)
                 writer.add_scalar('Energy Level', energy_lvl, episode * iteration)
                 writer.add_scalar('Data Left', data_left, episode * iteration)
+                writer.add_scalar('Tau', TAU, episode * iteration)
 
             state = next_state
             iteration += 1
