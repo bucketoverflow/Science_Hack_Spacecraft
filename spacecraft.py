@@ -46,7 +46,7 @@ class Spacecraft(gym.Env):
     # Next one 67500000
     INITIAL_DATA_STORAGE = 60000000  # [bits]
     POWER_CONSUMPTION = 10  # [W]
-    INITIAL_PROPELLANT_MASS = 2  # [Kg]
+    INITIAL_PROPELLANT_MASS = 2  # 2 [Kg]
     R_NEPTUNE = 24622  # [km]
     MAX_STEPS = 5000
 
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     env = Spacecraft(render_mode="human")
     env.reset()
     model = load_model(
-        "/Users/benedikt/Desktop/environment/Klon\model_2023-05-2023_00_04_299724.pt", env)
+        "/Users/benedikt/Desktop/environment/Klon\\all_data_send_model_2023-05-2102_01_22_300128.pt", env)
 
     action_list = []
     for t in count():

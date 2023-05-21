@@ -25,20 +25,23 @@ class DQN(nn.Module):
         return self.fc3(x)
 
 
-def main():
+def main(model=None):
     # Initialize environment
     env = Spacecraft()
 
     # Hyperparameters
-    EPISODES = 1000
+    EPISODES = 2500
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 0.01
     GAMMA = 0.99
-    LR = 0.08
+    LR = 0.03
 
     # Initialize DQN
-    dqn = DQN(env.observation_space.shape[0], env.action_space.n)
+    if model:
+        dqn = model
+    else:
+        dqn = DQN(env.observation_space.shape[0], env.action_space.n)
     optimizer = optim.Adam(dqn.parameters(), lr=LR)
     criterion = nn.MSELoss()
 
@@ -52,7 +55,7 @@ def main():
     for episode in range(EPISODES):
         state, unused = env.reset()
         print(f"Episode {episode} from {EPISODES}")
-        eps = EPS_START - 0.01 * episode
+        eps = 0.05  + (EPS_START - 0.05) * np.exp (-1*episode/(EPISODES/2))
         done = False
         truncated = False
 
@@ -103,7 +106,7 @@ def main():
             iteration += 1
         current_dir = os.getcwd()
         time_stamp = str(datetime.datetime.now()).replace(" ", "").replace(":", "_").replace(".", "_")
-        if env.get_reward() > 4:
+        if episode == 700:
             save_model(dqn, optimizer, episode)
             print(reward)
     writer.close()
@@ -138,6 +141,6 @@ def load_model(path, env):
 if __name__ == "__main__":
     env = Spacecraft()
     model = load_model(
-    "/Users/benedikt/Desktop/environment/Klon\model_2023-05-2022_23_33_408626.pt", env)
-    Result = main()
+    "/Users/benedikt/Desktop/environment/Klon\\all_data_send_model_2023-05-2101_20_53_497069.pt", env)
+    Result = main(model)
     print("Finished")
